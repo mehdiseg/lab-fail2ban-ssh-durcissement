@@ -72,6 +72,7 @@ ignoreip = 127.0.0.1/8 ::1 192.168.50.0/24
 
 [sshd]
 enabled = true
+backend = systemd
 ```
 
 ```bash
@@ -79,7 +80,9 @@ sudo systemctl enable --now fail2ban
 sudo systemctl restart fail2ban
 ```
 
-`ignoreip` protège son propre réseau d'un auto-bannissement. Sur Debian 12, fail2ban lit par défaut le journal systemd : vérifier avec `sudo fail2ban-client get sshd logpath` et `journalctl -u ssh` que les échecs sont bien détectés.
+`ignoreip` protège son propre réseau d'un auto-bannissement.
+
+**`backend = systemd` est indispensable sur une Debian 12 « minimale ».** Sans `rsyslog`, le fichier `/var/log/auth.log` n'existe pas, et fail2ban refuse de démarrer la jail avec l'erreur `Have not found any log file for sshd jail` (constaté en testant cette configuration dans un conteneur Debian 12 : la ligne `backend = systemd` fait passer `fail2ban-client -t` de l'échec au succès). Avec cette ligne, fail2ban lit les échecs de connexion directement dans le journal systemd. Vérifier ensuite avec `sudo fail2ban-client status sshd` et `sudo journalctl -u ssh`.
 
 ## Vérifications
 
@@ -104,7 +107,7 @@ ssh -o PubkeyAuthentication=no utilisateur-bidon@192.168.50.10    # 5 essais ave
 
 - **Se verrouiller dehors** : `PasswordAuthentication no` avant d'avoir copié la clé, ou `AllowUsers` sans son propre compte. D'où la session gardée ouverte et `sshd -t`.
 - Le service s'appelle `ssh` sous Debian (`sshd` sous d'autres distributions).
-- Fail2ban qui ne détecte rien : mauvais `backend` ou chemin de journal.
+- Fail2ban qui ne démarre pas (« Have not found any log file ») ou qui ne détecte rien : `backend = systemd` manquant (voir plus haut), ou `rsyslog` absent alors que le backend attend `/var/log/auth.log`.
 - Bannir sa propre adresse en testant : prévoir `ignoreip` ou tester depuis une machine dédiée.
 
 ## Pour aller plus loin
