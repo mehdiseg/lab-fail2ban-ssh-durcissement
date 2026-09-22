@@ -1,6 +1,8 @@
 # Lab sécurité : durcir SSH et bannir les attaques avec fail2ban
 
 > **Statut : à réaliser.** Ce guide est préparé à partir de la documentation officielle et de mes cours ; **je ne l'ai pas encore rejoué de bout en bout**. Les commandes sont à valider en le faisant, et le journal en bas de page sera complété avec mes résultats réels (captures, erreurs rencontrées, corrections).
+>
+> **Commandes vérifiées :** ce guide a été rejoué dans des conteneurs Debian 12 et 13 (22 septembre 2026) avec les vrais `sshd` et fail2ban : `sshd -t` valide la configuration, une connexion par clé fonctionne pour l'administrateur mais est refusée pour `root` et pour un compte hors `AllowUsers`, et un mot de passe est refusé même correct. `fail2ban-client -t` valide la jail, son filtre reconnaît 5 vrais messages `Failed password` sans confondre une connexion réussie, et un vrai serveur fail2ban a banni l'adresse au 5ᵉ échec, épargné l'adresse du réseau protégé, et accepté le débannissement. C'est ce test qui a révélé qu'il manquait `backend = systemd` dans `jail.local` sur une Debian minimale : la ligne a été ajoutée. Vérifié ne veut pas dire réalisé : c'est l'assistant IA qui a préparé ce guide qui a rejoué ces commandes dans un conteneur jetable, pas moi sur mon propre lab. Le journal ci-dessous reste à remplir une fois que je l'aurai fait moi-même.
 
 ## Objectif
 
